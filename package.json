@@ -2,7 +2,7 @@
   "name": "release-action",
   "private": true,
   "type": "commonjs",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "scripts": {
     "build": "npm run build:open-pr && npm run build:create-release",
     "build:open-pr": "ncc build src/open-pr.ts -o dist/open-pr --source-map --license licenses.txt",
