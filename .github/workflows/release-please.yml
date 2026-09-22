@@ -11,6 +11,7 @@ permissions:
 jobs:
   release:
     runs-on: ubuntu-latest
+    if: ${{ !contains(github.event.head_commit.message, '[skip ci]') }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -46,6 +47,6 @@ jobs:
         env:
           TAG: ${{ steps.rp.outputs.tag_name }}
         run: |
-          MAJOR=$(echo "$TAG" | grep -oP '^v\d+')
+          MAJOR=$(echo "$TAG" | sed 's/\(v[0-9]*\)\..*/\1/')
           git tag -fa "$MAJOR" -m "Update $MAJOR to $TAG"
           git push origin "$MAJOR" --force
