@@ -1,0 +1,15 @@
+name: Create release
+description: Apply release-please updates, tag, and create GitHub releases after a merged PR
+inputs:
+  token:          { required: true, description: PAT or GitHub App token }
+  release-branch: { default: main }
+  config-file:    { default: release-please-config.json }
+  manifest-file:  { default: .release-please-manifest.json }
+outputs:
+  released:
+    description: "'true' if releases were created"
+  tags:
+    description: Comma-separated list of created tags
+runs:
+  using: node24
+  main: ../dist/create-release/index.js

@@ -1,0 +1,22 @@
+{
+  "name": "release-action",
+  "private": true,
+  "type": "commonjs",
+  "version": "1.0.0",
+  "scripts": {
+    "build": "npm run build:open-pr && npm run build:create-release",
+    "build:open-pr": "ncc build src/open-pr.ts -o dist/open-pr --source-map --license licenses.txt",
+    "build:create-release": "ncc build src/create-release.ts -o dist/create-release --source-map --license licenses.txt",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@actions/core": "1.11.1",
+    "@octokit/rest": "^20.1.2",
+    "release-please": "17.11.2"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "@vercel/ncc": "^0.38.3",
+    "typescript": "^5.6.0"
+  }
+}

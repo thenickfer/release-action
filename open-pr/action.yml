@@ -1,0 +1,16 @@
+name: Open release PR
+description: Compute SemVer bumps with release-please and open/update a PR from source to release branch
+inputs:
+  token:          { required: true, description: PAT or GitHub App token }
+  source-branch:  { default: dev }
+  release-branch: { default: main }
+  config-file:    { default: release-please-config.json }
+  manifest-file:  { default: .release-please-manifest.json }
+outputs:
+  has-changes:
+    description: "true if any module has a releasable change"
+  pr-body-file:
+    description: Path to the generated PR body
+runs:
+  using: node24
+  main: ../dist/open-pr/index.js
