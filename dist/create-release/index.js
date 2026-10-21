@@ -90168,25 +90168,34 @@ const node_fs_1 = __nccwpck_require__(73024);
 const node_path_1 = __nccwpck_require__(76760);
 const rest_1 = __nccwpck_require__(65772);
 function sh(cmd) {
+    core.info(`Running sh "${cmd}"`);
     return (0, node_child_process_1.execSync)(cmd, { encoding: 'utf8' }).trim();
 }
 async function run() {
+    core.info('Create release action started');
     const token = core.getInput('token', { required: true });
+    core.info(`Token found, length: ${token.length}`);
     const REL = core.getInput('release-branch'); // e.g. main
     const CONFIG = core.getInput('config-file');
     const MANIFEST = core.getInput('manifest-file');
     core.setSecret(token);
     const [owner, repo] = process.env.GITHUB_REPOSITORY.split('/');
+    core.info(`Owner: ${owner}, repo: ${repo}`);
     const github = await release_please_1.GitHub.create({ owner, repo, token, defaultBranch: REL });
+    core.info(`Created github client`);
     const manifest = await release_please_1.Manifest.fromManifest(github, REL, CONFIG, MANIFEST);
+    core.info(`Parsed release-please manifest`);
     const plans = await manifest.buildPullRequests();
+    core.info(`Manifest plans: ${JSON.stringify(plans.map(({ title, version }) => ({ title, version })))}`);
     if (plans.length === 0) {
         core.info('No releasable changes');
         core.setOutput('released', 'false');
         return;
     }
     for (const plan of plans) {
+        core.info(`Update plan: ${JSON.stringify({ title: plan.title, version: plan.version })}`);
         for (const u of plan.updates) {
+            core.info(`Update: ${JSON.stringify({ path: u.path })}`);
             let current;
             try {
                 current = sh(`git show HEAD:${u.path}`);
@@ -90201,6 +90210,7 @@ async function run() {
             (0, node_fs_1.writeFileSync)(u.path, u.updater.updateContent(current));
         }
     }
+    core.info(`Configuring git`);
     sh(`git config user.name release-bot`);
     sh(`git config user.email release-bot@users.noreply.github.com`);
     sh(`git add -A`);
@@ -90209,6 +90219,7 @@ async function run() {
     const created = [];
     const octokit = new rest_1.Octokit({ auth: token });
     for (const plan of plans) {
+        core.info(`Push plan: ${JSON.stringify({ title: plan.title, version: plan.version })}`);
         const component = plan.title.component ?? plan.labels?.[0] ?? '';
         const version = plan.version?.toString();
         if (!version)
@@ -90216,12 +90227,14 @@ async function run() {
         const tag = component ? `${component}-v${version}` : `v${version}`;
         sh(`git tag "${tag}"`);
         sh(`git push origin "${tag}"`);
+        core.info(`Creating release on github of plan ${plan.title} in version ${plan.version}`);
         await octokit.repos.createRelease({
             owner, repo, tag_name: tag, name: `${component || repo} ${version}`,
             body: plan.body.toString(),
         });
         created.push(tag);
     }
+    core.info(`Created releases: ${JSON.stringify(created)}`);
     core.setOutput('released', 'true');
     core.setOutput('tags', created.join(','));
 }
